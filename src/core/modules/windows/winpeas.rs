@@ -1,4 +1,5 @@
 // TODO: Create alternative using basic windows provided commands.
+// TODO: Create module to download from custom server. (WIN, Linux)
 
 use crate::core::modules::Module;
 use crate::core::loghandler::LogHandler;
