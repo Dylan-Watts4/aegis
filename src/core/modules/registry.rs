@@ -5,6 +5,7 @@ use crate::core::modules::linux::download::DownloadLinux;
 use crate::core::modules::linux::upload::UploadLinux;
 use crate::core::modules::linux::netstat::NetstatLinux;
 use crate::core::modules::linux::ps::PsLinux;
+use crate::core::modules::linux::interactive::InteractiveShellLinux;
 
 use crate::core::modules::windows::whoami::WhoamiWindows;
 use crate::core::modules::windows::systeminfo::SysteminfoWindows;
@@ -21,6 +22,7 @@ pub fn get_modules() -> Vec<Box<dyn Module>> {
         Box::new(UploadLinux),
         Box::new(NetstatLinux),
         Box::new(PsLinux),
+        Box::new(InteractiveShellLinux),
         Box::new(WhoamiWindows),
         Box::new(SysteminfoWindows),
         Box::new(DownloadWindows),

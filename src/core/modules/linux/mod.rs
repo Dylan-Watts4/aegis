@@ -4,3 +4,4 @@ pub mod download;
 pub mod upload;
 pub mod netstat;
 pub mod ps;
+pub mod interactive;
