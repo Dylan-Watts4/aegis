@@ -49,9 +49,20 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
 
         ["listen", "tcp", port_str] => {
             if let Ok(port) = port_str.parse::<u16>() {
-                let comms = TcpComms::new(port, Arc::clone(session_manager));
-                comms_manager.lock().unwrap().add_comms(Box::new(comms));
+                let comms = Arc::new(TcpComms::new(port, Arc::clone(session_manager)));
+                comms_manager.lock().unwrap().add_comms(comms.clone());
                 LogHandler::info(&format!("[*] Added TCP listener on port {}", port));
+            } else {
+                LogHandler::error(&format!("Invalid port: {}", port_str));
+            }
+        }
+
+        ["connect", "tcp", ip, port_str] => {
+            if let Ok(port) = port_str.parse::<u16>() {
+                let comms = Arc::new(TcpComms::new(0, Arc::clone(session_manager)));
+                comms.connect_to_bind_shell(ip, port);
+                comms_manager.lock().unwrap().add_comms(comms.clone());
+                LogHandler::info(&format!("[*] Connected to bind shell at {}:{}", ip, port));
             } else {
                 LogHandler::error(&format!("Invalid port: {}", port_str));
             }

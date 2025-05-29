@@ -1,5 +1,5 @@
 use std::io::{Write, Read};
-use std::net::{TcpListener};
+use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 
 use crate::core::comms::Comms;
@@ -14,6 +14,16 @@ pub struct TcpComms {
 impl TcpComms {
     pub fn new(port: u16, session_manager: Arc<SessionManager>) -> Self {
         TcpComms { port, session_manager }
+    }
+
+    pub fn connect_to_bind_shell(&self, ip: &str, port: u16) {
+        match TcpStream::connect((ip, port)) {
+            Ok(stream) => {
+                let session_id = self.session_manager.add_tcp_session(stream.try_clone().unwrap());
+                LogHandler::success(&format!("[+] New TCP session: {}", session_id));
+            }
+            Err(e) => LogHandler::error(&format!("[!] Connection error: {}", e)),
+        }
     }
 }
 
