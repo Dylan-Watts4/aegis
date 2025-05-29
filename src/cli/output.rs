@@ -1,3 +1,5 @@
+// TODO: Add timeouts to all functions to allow for safe communications between servers with high ping
+
 use std::io::{self, ErrorKind, Read, Write};
 use std::time::{Duration, Instant};
 use crate::core::session::{Session, ProtocolStream};
@@ -121,69 +123,33 @@ pub fn read_all_output(session: &Session, timeout_secs: u64) -> std::io::Result<
     Ok(buf)
 }
 
-// Depracated below
-/*
-pub fn send_command_and_print_output(locked: &mut std::net::TcpStream, command: &str) -> std::io::Result<()> {
-    use std::io::{Read, Write};
-    use std::thread;
-    use std::time::Duration;
-
-    locked.write_all(command.as_bytes())?;
-    locked.flush()?;
-
-    thread::sleep(Duration::from_millis(200));
-
+// Send command until marker and print
+pub fn send_command_and_print_output_until_marker(session: &Session, command: &str, marker: &str) -> std::io::Result<()> {
+    send_command(session, command);
     let mut buf = [0u8; 4096];
-    let n = locked.read(&mut buf)?;
-    if n > 0 {
-        print!("\r\x1b[2K");
-        print!("{}", String::from_utf8_lossy(&buf[..n]));
-    }
-
-    thread::sleep(Duration::from_millis(100));
-    Ok(())
-}
-
-pub fn send_command_and_get_output_until(locked: &mut std::net::TcpStream, command: &str, marker: &str) -> std::io::Result<Vec<u8>> {
-    use std::io::{Read, Write};
-    use std::time::{Duration, Instant};
-
-    locked.write_all(command.as_bytes())?;
-    locked.flush()?;
-
-    let mut buf = Vec::new();
-    let mut tmp = [0u8; 4096];
+    let marker_bytes = marker.as_bytes();
+    let mut window = Vec::new();
     let start = Instant::now();
-    let mut marker_count = 0;
-    
+    let timeout = Duration::from_secs(600);
+
     loop {
-        locked.set_read_timeout(Some(Duration::from_millis(300)))?;
-        match locked.read(&mut tmp) {
-            Ok(0) => {
+        let n = read_output(session, &mut buf)?;
+        if n > 0 {
+            print!("{}", String::from_utf8_lossy(&buf[..n]));
+            window.extend_from_slice(&buf[..n]);
+            if window.len() > marker_bytes.len() * 2 {
+                window.drain(..window.len() - marker_bytes.len() * 2);
+            }
+            if window.windows(marker_bytes.len()).filter(|w| *w == marker_bytes).count() >= 2 {
                 break;
-            }, // EOF
-            Ok(n) => {
-                buf.extend_from_slice(&tmp[..n]);
-                marker_count += String::from_utf8_lossy(&tmp[..n])
-                    .matches(marker)
-                    .count();
-                if marker_count >= 2 {
-                    break;
-                }
             }
-            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock || e.kind() == std::io::ErrorKind::TimedOut => {
-                if start.elapsed() > Duration::from_secs(30) {
-                    break;
-                }
-                continue;
-            }
-            Err(e) => return Err(e),
+        } else {
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
-        if start.elapsed() > Duration::from_secs(30) {
+        if start.elapsed() > timeout {
+            LogHandler::warn("Timeout waiting for end marker");
             break;
         }
     }
-
-    Ok(buf)
+    Ok(())
 }
-    */

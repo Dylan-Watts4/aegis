@@ -5,3 +5,5 @@ pub mod upload;
 pub mod netstat;
 pub mod ps;
 pub mod interactive;
+pub mod sudo_check;
+pub mod linpeas;

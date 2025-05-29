@@ -6,6 +6,8 @@ use crate::core::modules::linux::upload::UploadLinux;
 use crate::core::modules::linux::netstat::NetstatLinux;
 use crate::core::modules::linux::ps::PsLinux;
 use crate::core::modules::linux::interactive::InteractiveShellLinux;
+use crate::core::modules::linux::sudo_check::SudoCheckLinux;
+use crate::core::modules::linux::linpeas::LinpeasLinux;
 
 use crate::core::modules::windows::whoami::WhoamiWindows;
 use crate::core::modules::windows::systeminfo::SysteminfoWindows;
@@ -13,6 +15,7 @@ use crate::core::modules::windows::download::DownloadWindows;
 use crate::core::modules::windows::upload::UploadWindows;
 use crate::core::modules::windows::netstat::NetstatWindows;
 use crate::core::modules::windows::tasklist::TasklistWindows;
+use crate::core::modules::windows::winpeas::WinpeasWindows;
 
 pub fn get_modules() -> Vec<Box<dyn Module>> {
     vec![
@@ -23,11 +26,14 @@ pub fn get_modules() -> Vec<Box<dyn Module>> {
         Box::new(NetstatLinux),
         Box::new(PsLinux),
         Box::new(InteractiveShellLinux),
+        Box::new(SudoCheckLinux),
+        Box::new(LinpeasLinux),
         Box::new(WhoamiWindows),
         Box::new(SysteminfoWindows),
         Box::new(DownloadWindows),
         Box::new(UploadWindows),
         Box::new(NetstatWindows),
         Box::new(TasklistWindows),
+        Box::new(WinpeasWindows),
     ]
 }
