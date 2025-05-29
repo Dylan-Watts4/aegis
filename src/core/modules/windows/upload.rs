@@ -9,6 +9,8 @@ impl Module for UploadWindows {
     fn name(&self) -> &'static str { "windows/upload" }
     fn description(&self) -> &'static str { "Upload a file to the target (Windows) using base64" }
     fn usage(&self) -> &'static str { "Usage: run-module windows/upload <session_id> <local_path> <remote_path>" }
+    fn platform(&self) -> &'static str { "windows" }
+    fn category(&self) -> &'static str { "file-transfer" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>) {
         let (local_path, remote_path) = match (args.get(0), args.get(1)) {
             (Some(l), Some(r)) => (l, r),

@@ -7,6 +7,8 @@ impl Module for NetstatWindows {
     fn name(&self) -> &'static str { "windows/netstat" }
     fn description(&self) -> &'static str { "Show network connections (netstat -ano)" }
     fn usage(&self) -> &'static str { "Usage: run-module windows/netstat <session_id>" }
+    fn platform(&self) -> &'static str { "windows" }
+    fn category(&self) -> &'static str { "enumeration" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>) {
         if let Some(session) = session_manager.get(session_id) {
             let mut locked = session.stream.lock().unwrap();

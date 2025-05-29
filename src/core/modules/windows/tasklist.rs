@@ -7,6 +7,8 @@ impl Module for TasklistWindows {
     fn name(&self) -> &'static str { "windows/tasklist" }
     fn description(&self) -> &'static str { "List running processes (tasklist)" }
     fn usage(&self) -> &'static str { "Usage: run-module windows/tasklist <session_id>" }
+    fn platform(&self) -> &'static str { "windows" }
+    fn category(&self) -> &'static str { "enumeration" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>) {
         if let Some(session) = session_manager.get(session_id) {
             let mut locked = session.stream.lock().unwrap();

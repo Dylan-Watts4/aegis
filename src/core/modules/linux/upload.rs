@@ -10,6 +10,8 @@ impl Module for UploadLinux {
     fn name(&self) -> &'static str { "linux/upload" }
     fn description(&self) -> &'static str { "Upload a file to the target (Linux) using base64" }
     fn usage(&self) -> &'static str { "Usage: run-module linux/upload <session_id> <local_path> <remote_path>" }
+    fn platform(&self) -> &'static str { "linux" }
+    fn category(&self) -> &'static str { "file-transfer" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>) {
         let (local_path, remote_path) = match (args.get(0), args.get(1)) {
             (Some(l), Some(r)) => (l, r),

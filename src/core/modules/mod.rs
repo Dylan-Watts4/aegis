@@ -6,5 +6,7 @@ pub trait Module {
     fn name(&self) -> &'static str;
     fn description(&self) -> &'static str;
     fn usage(&self) -> &'static str;
+    fn platform(&self) -> &'static str;
+    fn category(&self) -> &'static str;
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>);
 }

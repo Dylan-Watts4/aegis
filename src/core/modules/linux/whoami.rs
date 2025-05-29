@@ -7,6 +7,8 @@ impl Module for WhoamiLinux {
     fn name(&self) -> &'static str { "linux/whoami" }
     fn description(&self) -> &'static str { "Get current user (Linux)" }
     fn usage(&self) -> &'static str { "Usage: run-module <session_id>" }
+    fn platform(&self) -> &'static str { "linux" }
+    fn category(&self) -> &'static str { "enumeration" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, _args: Vec<String>) {
         if let Some(session) = session_manager.get(session_id) {
             let mut locked = session.stream.lock().unwrap();

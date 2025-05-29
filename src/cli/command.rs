@@ -29,17 +29,17 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
     match parts.as_slice() {
         ["help"] => {
             println!("Commands");
-            println!("\thelp\t\t\tShow this help menu");
-            println!("\texit\t\t\tQuit the shell");
-            println!("\tlisten tcp <port>\tStart a TCP listener");
-            println!("\tsessions\t\tList active sessions");
-            println!("\tclose <id>\t\tClose a session");
-            println!("\tinteract <id>\t\tInteract with a session");
-            println!("\tupgrade-shell <id>\tSend PTY upgrade command to session");
-            println!("\trun-script <id> <file>\tRun a script of commands on a session");
-            println!("\tmodules\t\t\tList available modules");
-            println!("\trun-module <name> <id>\tRun a module on a session");
-            println!("\tmodule-help <name>\tShow help for a module");
+            println!("\thelp\t\t\t\tShow this help menu");
+            println!("\texit\t\t\t\tQuit the shell");
+            println!("\tlisten tcp <port>\t\tStart a TCP listener");
+            println!("\tsessions\t\t\tList active sessions");
+            println!("\tclose <id>\t\t\tClose a session");
+            println!("\tinteract <id>\t\t\tInteract with a session");
+            println!("\tupgrade-shell <id>\t\tSend PTY upgrade command to session");
+            println!("\trun-script <id> <file>\t\tRun a script of commands on a session");
+            println!("\tmodules <platform> <category>\tList available modules");
+            println!("\trun-module <name> <id>\t\tRun a module on a session");
+            println!("\tmodule-help <name>\t\tShow help for a module");
         }
 
         ["exit"] => {
@@ -170,9 +170,25 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
 
         ["modules"] => {
             let modules = get_modules();
-            println!("{:<20}{}", "Name", "Description");
+            println!("{:<20}{:<12}{:<16}{}", "Name", "Platform", "Category", "Description");
             for m in modules.iter() {
-                println!("{:<20}{}", m.name(), m.description());
+                println!("{:<20}{:<12}{:<16}{}", m.name(), m.platform(), m.category(), m.description());
+            }
+        }
+
+        ["modules", platform] => {
+            let modules = get_modules();
+            println!("{:<20}{:<12}{:<16}{}", "Name", "Platform", "Category", "Description");
+            for m in modules.iter().filter(|m| m.platform() == *platform) {
+                println!("{:<20}{:<12}{:<16}{}", m.name(), m.platform(), m.category(), m.description());
+            }
+        }
+
+        ["modules", platform, category] => {
+            let modules = get_modules();
+            println!("{:<20}{:<12}{:<16}{}", "Name", "Platform", "Category", "Description");
+            for m in modules.iter().filter(|m| m.platform() == *platform && m.category() == *category) {
+                println!("{:<20}{:<12}{:<16}{}", m.name(), m.platform(), m.category(), m.description());
             }
         }
 
