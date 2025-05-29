@@ -39,6 +39,7 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
             println!("\trun-script <id> <file>\tRun a script of commands on a session");
             println!("\tmodules\t\t\tList available modules");
             println!("\trun-module <name> <id>\tRun a module on a session");
+            println!("\tmodule-help <name>\tShow help for a module");
         }
 
         ["exit"] => {
@@ -187,19 +188,17 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
                 }
             }
         }
-        /*
-        ["run-module", module_name, id_str] => {
-            if let Some((id, _)) = get_session_by_id(session_manager, id_str) {
-                let modules = get_modules();
-                if let Some(module) = modules.iter().find(|m| m.name() == *module_name) {
-                    module.run(id, session_manager, None);
-                    LogHandler::success(&format!("[*] Ran module '{}' on session {}", module_name, id));
-                } else {
-                    LogHandler::warn(&format!("Module '{}' not found", module_name));
-                }
+        
+        ["module-help", module_name] => {
+            let modules = get_modules();
+            if let Some(module) = modules.iter().find(|m| m.name() == *module_name) {
+                println!("Module: {}", module.name());
+                println!("Description: {}", module.description());
+                println!("{}", module.usage());
+            } else {
+                LogHandler::warn(&format!("Module '{}' not found", module_name));
             }
         }
-        */
 
         _ => {
             LogHandler::warn("Unknown command. Type `help` for a list.");

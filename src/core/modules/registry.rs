@@ -3,10 +3,15 @@ use crate::core::modules::linux::whoami::WhoamiLinux;
 use crate::core::modules::linux::uname::UnameLinux;
 use crate::core::modules::linux::download::DownloadLinux;
 use crate::core::modules::linux::upload::UploadLinux;
+use crate::core::modules::linux::netstat::NetstatLinux;
+use crate::core::modules::linux::ps::PsLinux;
+
 use crate::core::modules::windows::whoami::WhoamiWindows;
 use crate::core::modules::windows::systeminfo::SysteminfoWindows;
 use crate::core::modules::windows::download::DownloadWindows;
 use crate::core::modules::windows::upload::UploadWindows;
+use crate::core::modules::windows::netstat::NetstatWindows;
+use crate::core::modules::windows::tasklist::TasklistWindows;
 
 pub fn get_modules() -> Vec<Box<dyn Module>> {
     vec![
@@ -14,9 +19,13 @@ pub fn get_modules() -> Vec<Box<dyn Module>> {
         Box::new(UnameLinux),
         Box::new(DownloadLinux),
         Box::new(UploadLinux),
+        Box::new(NetstatLinux),
+        Box::new(PsLinux),
         Box::new(WhoamiWindows),
         Box::new(SysteminfoWindows),
         Box::new(DownloadWindows),
         Box::new(UploadWindows),
+        Box::new(NetstatWindows),
+        Box::new(TasklistWindows),
     ]
 }

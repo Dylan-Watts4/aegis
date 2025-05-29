@@ -17,7 +17,7 @@ impl Completer for AegisCompleter {
     ) -> Result<(usize, Vec<Pair>), rustyline::error::ReadlineError> {
         let commands = [
             "help", "exit", "listen", "sessions", "close", "interact",
-            "upgrade-shell", "run-script", "modules", "run-module"
+            "upgrade-shell", "run-script", "modules", "run-module", "module-help"
         ];
         let mut completions = Vec::new();
         let start = 0;

@@ -8,6 +8,7 @@ pub struct DownloadWindows;
 impl Module for DownloadWindows {
     fn name(&self) -> &'static str { "windows/download" }
     fn description(&self) -> &'static str { "Download any file from target (Windows) using base64" }
+    fn usage(&self) -> &'static str { "Usage: run-module windows/download <session_id> <remote_path>" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, args: Vec<String>) {
         let file_path = match args.get(0) {
             Some(path) => path,
