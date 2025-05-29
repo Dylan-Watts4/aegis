@@ -21,7 +21,7 @@ impl Module for DownloadWindows {
             let mut locked = session.stream.lock().unwrap();
             let marker = "__AEGIS_END__";
             // Windows: use certutil for base64 encoding
-            let cmd = format!("certutil -encode \"{}\" tmpb64.txt & type tmpb64.txt & del tmpb64.txt & echo {}", file_path, marker);
+            let cmd = format!("certutil -encode \"{}\" tmpb64.txt ; type tmpb64.txt ; del tmpb64.txt ; echo {}\n", file_path, marker);
             match crate::cli::output::send_command_and_get_output_until(&mut *locked, &cmd, marker) {
                 Ok(data) => {
                     let marker_bytes = marker.as_bytes();
