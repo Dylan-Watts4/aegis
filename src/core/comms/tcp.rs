@@ -28,28 +28,43 @@ impl TcpComms {
 }
 
 impl Comms for TcpComms {
-    fn start(&mut self) {
-        let listener = TcpListener::bind(("0.0.0.0", self.port)).expect("Failed to bind TCP port");
-
+    fn start(&self) {
+        let port = self.port;
         let session_manager = Arc::clone(&self.session_manager);
 
-        for stream in listener.incoming() {
-            match stream {
-                Ok(stream) => {
-                    let session_manager = Arc::clone(&session_manager);
-                    let session_id = session_manager.add_tcp_session(stream.try_clone().unwrap());
-
-                    LogHandler::success(&format!("[+] New TCP session: {}", session_id));
+        std::thread::spawn(move || {
+            let listener = match TcpListener::bind(("0.0.0.0", port)) {
+                Ok(l) => l,
+                Err(e) => {
+                    LogHandler::error(&format!("Failed to bind TCP port {}: {}", port, e));
+                    return;
                 }
-                Err(e) => LogHandler::error(&format!("[!] Connection error: {}", e)),
+            };
+
+            for stream in listener.incoming() {
+                match stream {
+                    Ok(stream) => {
+                        let session_manager = Arc::clone(&session_manager);
+                        let session_id = session_manager.add_tcp_session(stream.try_clone().unwrap());
+                        LogHandler::success(&format!("[+] New TCP session: {}", session_id));
+                    }
+                    Err(e) => LogHandler::error(&format!("[!] Connection error: {}", e)),
+                }
             }
-        }
+        });
     }
 
     fn send(&self, session_id: usize, data: &[u8]) -> Result<(), String> {
         if let Some(session) = self.session_manager.get(session_id) {
-            let mut stream = session.stream.lock().map_err(|e| e.to_string())?;
-            stream.write_all(data).map_err(|e| e.to_string())?;
+            match &session.stream {
+                crate::core::session::ProtocolStream::Tcp(stream) => {
+                    let mut stream = stream.lock().map_err(|e| e.to_string())?;
+                    stream.write_all(data).map_err(|e| e.to_string())?;
+                }
+                crate::core::session::ProtocolStream::Udp { socket, remote_addr } => {
+                    socket.send_to(data, remote_addr).map_err(|e| e.to_string())?;
+                }
+            }
             if let Ok(mut last_active) = session.last_active.lock() {
                 *last_active = std::time::SystemTime::now();
             }
@@ -59,11 +74,19 @@ impl Comms for TcpComms {
         }
     }
 
+
     fn receive(&self, session_id: usize) -> Result<Vec<u8>, String> {
         if let Some(session) = self.session_manager.get(session_id) {
-            let mut stream = session.stream.lock().map_err(|e| e.to_string())?;
             let mut buf = [0u8; 4096];
-            let size = stream.read(&mut buf).map_err(|e| e.to_string())?;
+            let size = match &session.stream {
+                crate::core::session::ProtocolStream::Tcp(stream) => {
+                    let mut stream = stream.lock().map_err(|e| e.to_string())?;
+                    stream.read(&mut buf).map_err(|e| e.to_string())?
+                }
+                crate::core::session::ProtocolStream::Udp { socket, .. } => {
+                    socket.recv(&mut buf).map_err(|e| e.to_string())?
+                }
+            };
             if let Ok(mut last_active) = session.last_active.lock() {
                 *last_active = std::time::SystemTime::now();
             }

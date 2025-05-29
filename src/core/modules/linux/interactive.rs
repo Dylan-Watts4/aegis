@@ -1,5 +1,6 @@
 use crate::core::modules::Module;
 use crate::core::loghandler::LogHandler;
+use crate::cli::output::send_command;
 
 use std::io::Write;
 
@@ -13,7 +14,6 @@ impl Module for InteractiveShellLinux {
     fn category(&self) -> &'static str { "session" }
     fn run(&self, session_id: usize, session_manager: &crate::core::session::SessionManager, _args: Vec<String>) {
         if let Some(session) = session_manager.get(session_id) {
-            let mut locked = session.stream.lock().unwrap();
             let cmds = [
                 "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'\n",
                 "export TERM=xterm\n",
@@ -22,14 +22,10 @@ impl Module for InteractiveShellLinux {
                 "reset\n"
             ];
             for cmd in cmds.iter() {
-                if let Err(e) = locked.write_all(cmd.as_bytes()) {
+                if let Err(e) = send_command(&session, cmd) {
                     LogHandler::error(&format!("Failed to send command: {}", e));
                     return;
                 }
-            }
-            if let Err(e) = locked.flush() {
-                LogHandler::error(&format!("Failed to flush commands: {}", e));
-                return;
             }
             LogHandler::success("Sent interactive shell upgrade commands.");
         }

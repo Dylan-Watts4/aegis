@@ -1,5 +1,6 @@
 use crate::core::modules::Module;
 use crate::core::loghandler::LogHandler;
+use crate::cli::output::{send_command_and_print_output, send_chunks};
 use std::fs;
 use base64;
 
@@ -30,20 +31,17 @@ impl Module for UploadWindows {
         let b64 = base64::encode(&file_data);
 
         if let Some(session) = session_manager.get(session_id) {
-            let mut locked = session.stream.lock().unwrap();
             let tmp_path = "C:\\Windows\\Temp\\aegis_upload.b64";
             // Remove any old tmp file
-            let _ = crate::cli::output::send_command_and_print_output(&mut *locked, &format!("del {}\n", tmp_path));
+            let _ = send_command_and_print_output(&session, &format!("del {}\n", tmp_path));
             // Send b64 in chunks
-            for chunk in b64.as_bytes().chunks(512) {
-                let chunk_str = std::str::from_utf8(chunk).unwrap();
-                // Force powershell
-                let cmd = format!("powershell -Command \"Add-Content -Path '{}' -Value '{}'\"\n", tmp_path, chunk_str);
-                let _ = crate::cli::output::send_command_and_print_output(&mut *locked, &cmd);
-            }
+            let _ = send_chunks(&session, b64.as_bytes(), 512, 
+                &format!("powershell -Command \"Add-Content -Path '{}' -Value '", tmp_path),
+                "'\"\n"
+            );
             // Decode on the remote side
             let decode_cmd = format!("certutil -decode {} \"{}\" ; del {} \n", tmp_path, remote_path, tmp_path);
-            let _ = crate::cli::output::send_command_and_print_output(&mut *locked, &decode_cmd);
+            let _ = send_command_and_print_output(&session, &decode_cmd);
             LogHandler::success(&format!("Uploaded '{}' to '{}'", local_path, remote_path));
         }
     }

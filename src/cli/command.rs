@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 use std::io::Write;
 use crate::core::session::{SessionManager, Session};
 use crate::core::comms::manager::CommsManager;
-use crate::core::comms::tcp::TcpComms;
+use crate::core::comms::{Comms, tcp::TcpComms, udp::UdpComms};
 use crate::core::modules::registry::get_modules;
 use crate::core::loghandler::LogHandler;
 use super::interactive::interact_with_session;
@@ -50,8 +50,20 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
         ["listen", "tcp", port_str] => {
             if let Ok(port) = port_str.parse::<u16>() {
                 let comms = Arc::new(TcpComms::new(port, Arc::clone(session_manager)));
+                comms.start();
                 comms_manager.lock().unwrap().add_comms(comms.clone());
                 LogHandler::info(&format!("[*] Added TCP listener on port {}", port));
+            } else {
+                LogHandler::error(&format!("Invalid port: {}", port_str));
+            }
+        }
+
+        ["listen", "udp", port_str] => {
+            if let Ok(port) = port_str.parse::<u16>() {
+                let comms = Arc::new(UdpComms::new(port, Arc::clone(session_manager)));
+                comms.start();
+                comms_manager.lock().unwrap().add_comms(comms.clone());
+                LogHandler::info(&format!("[*] Added UDP listener on port {}", port));
             } else {
                 LogHandler::error(&format!("Invalid port: {}", port_str));
             }
@@ -114,28 +126,6 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
             }
         }
 
-        ["upgrade-shell", id_str] => {
-            if let Some((id, session)) = get_session_by_id(session_manager, id_str) {
-                let upgrade_cmd = "python3 -c 'import pty; pty.spawn(\"/bin/bash\")'\n";
-                let mut locked = match session.stream.lock() {
-                    Ok(l) => l,
-                    Err(e) => {
-                        LogHandler::error(&format!("Failed to lock the session stream: {}", e));
-                        return;
-                    }
-                };
-                if let Err(e) = locked.write_all(upgrade_cmd.as_bytes()) {
-                    LogHandler::error(&format!("Failed to send upgrade command: {}", e));
-                    return;
-                }
-                if let Err(e) = locked.flush() {
-                    LogHandler::error(&format!("Failed to flush upgrade command: {}", e));
-                    return;
-                }
-                LogHandler::success(&format!("[*] Sent PTY upgrade command to session {}", id));
-            }
-        }
-
         ["run-script", id_str, script_path] => {
             use std::fs::File;
             use std::io::{BufRead, BufReader};
@@ -149,13 +139,6 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
                     }
                 };
                 let reader = BufReader::new(file);
-                let mut locked = match session.stream.lock() {
-                    Ok(l) => l,
-                    Err(e) => {
-                        LogHandler::error(&format!("Failed to lock the session stream: {}", e));
-                        return;
-                    }
-                };
                 for line in reader.lines() {
                     match line {
                         Ok(cmd) => {
@@ -164,7 +147,7 @@ pub fn handle_command(cmd: &str, session_manager: &Arc<SessionManager>, comms_ma
                                 continue;
                             }
                             let cmd_with_newline = format!("{}\n", trimmed);
-                            if let Err(e) = send_command_and_print_output(&mut *locked, &cmd_with_newline) {
+                            if let Err(e) = send_command_and_print_output(&session, &cmd_with_newline) {
                                 LogHandler::error(&format!("Failed to send command: {}", e));
                                 break;
                             }
