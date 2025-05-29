@@ -7,3 +7,4 @@ pub mod ps;
 pub mod interactive;
 pub mod sudo_check;
 pub mod linpeas;
+pub mod shadow_dump;

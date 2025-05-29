@@ -5,3 +5,5 @@ pub mod upload;
 pub mod netstat;
 pub mod tasklist;
 pub mod winpeas;
+pub mod sam_dump;
+pub mod lsass_dump;
