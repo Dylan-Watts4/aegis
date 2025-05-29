@@ -34,7 +34,7 @@ pub fn interact_with_session(session_manager: Arc<SessionManager>, session: crat
             };
             if let Ok(n) = n {
                 if n > 0 {
-                    print!("\r\x1b[2K");
+                    //print!("\r\x1b[2K");
                     print!("{}", String::from_utf8_lossy(&buffer[..n]));
                     io::stdout().flush().unwrap();
                 }
@@ -62,6 +62,31 @@ pub fn interact_with_session(session_manager: Arc<SessionManager>, session: crat
                         kill.store(true, Ordering::SeqCst);
                         break;
                     }
+                    (KeyCode::Tab, _) => {
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(&[b'\t'])?;
+                        locked.flush()?;
+                    }
+                    (KeyCode::Left, _) => {
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(b"\x1b[D")?;
+                        locked.flush()?;
+                    }
+                    (KeyCode::Right, _) => {
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(b"\x1b[C")?;
+                        locked.flush()?;
+                    }
+                    (KeyCode::Up, _) => {
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(b"\x1b[A")?;
+                        locked.flush()?;
+                    }
+                    (KeyCode::Down, _) => {
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(b"\x1b[B")?;
+                        locked.flush()?;
+                    }
                     (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
                         let mut locked = stream.lock().unwrap();
                         locked.write_all(&[0x03])?; // Ctrl+C
@@ -73,11 +98,17 @@ pub fn interact_with_session(session_manager: Arc<SessionManager>, session: crat
                         locked.flush()?;
                     }
                     (KeyCode::Char(c), _) => {
+                        /*
                         input_buffer.push(c);
                         print!("{}", c);
                         io::stdout().flush().unwrap();
+                        */
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(&[c as u8])?;
+                        locked.flush()?;
                     }
                     (KeyCode::Enter, _) => {
+                        /*
                         input_buffer.push('\n');
                         let mut locked = stream.lock().unwrap();
                         locked.write_all(input_buffer.as_bytes())?;
@@ -85,11 +116,20 @@ pub fn interact_with_session(session_manager: Arc<SessionManager>, session: crat
                         input_buffer.clear();
                         print!("\r\n");
                         io::stdout().flush().unwrap();
+                        */
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(b"\n")?;
+                        locked.flush()?;
                     }
                     (KeyCode::Backspace, _) => {
+                        /*
                         input_buffer.pop();
                         print!("\x08 \x08");
                         io::stdout().flush().unwrap();
+                        */
+                        let mut locked = stream.lock().unwrap();
+                        locked.write_all(&[0x7f])?; // DEL
+                        locked.flush()?;
                     }
                     (KeyCode::Esc, _) => {
                         LogHandler::info("\n[*] Exiting interactive mode...");
