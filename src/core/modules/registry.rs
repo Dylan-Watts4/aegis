@@ -9,6 +9,7 @@ use crate::core::modules::linux::interactive::InteractiveShellLinux;
 use crate::core::modules::linux::sudo_check::SudoCheckLinux;
 use crate::core::modules::linux::linpeas::LinpeasLinux;
 use crate::core::modules::linux::shadow_dump::ShadowDumpLinux;
+use crate::core::modules::linux::ssh_key_harvest::SshKeyHarvestLinux;
 
 use crate::core::modules::windows::whoami::WhoamiWindows;
 use crate::core::modules::windows::systeminfo::SysteminfoWindows;
@@ -32,6 +33,7 @@ pub fn get_modules() -> Vec<Box<dyn Module>> {
         Box::new(SudoCheckLinux),
         Box::new(LinpeasLinux),
         Box::new(ShadowDumpLinux),
+        Box::new(SshKeyHarvestLinux),
         Box::new(WhoamiWindows),
         Box::new(SysteminfoWindows),
         Box::new(DownloadWindows),
